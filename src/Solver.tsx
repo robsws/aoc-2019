@@ -169,3 +169,30 @@ export function getMinimalSignalDelay(commands: string[][]) {
   });
   return lowest_delay;
 }
+
+export function numberOfPasswords(min: number, max: number, part: number) {
+  let double_digit_pattern;
+  if (part === 1) {
+    double_digit_pattern = new RegExp('(.)\\1');
+  } else {
+    double_digit_pattern = new RegExp('(?:^(.)\\1(?!\\1))|(?:(.)((?!\\2).)\\3(?!\\3))');
+  }
+  let passwords = 0;
+  password_loop:
+  for (let i = min+1; i < max; i++) {
+    const password = i.toString()
+    if (double_digit_pattern.test(password)) {
+      let last_digit = 0;
+      for (let j = 0; j < password.length; j++) {
+        const digit = parseInt(password[j]);
+        if (digit < last_digit) {
+          continue password_loop;
+        }
+        last_digit = digit;
+      }
+      console.log(password);
+      passwords += 1;
+    }
+  }
+  return passwords;
+}

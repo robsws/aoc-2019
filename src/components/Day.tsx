@@ -3,7 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { Container } from 'react-bootstrap';
 import BasicAnswer from './BasicAnswer';
 import Inputs from '../Inputs';
-import {totalFuelRequired, totalFuelWithFuelRequired, runIntcode, findNounAndVerb, getClosestIntersectionPointDistance, getMinimalSignalDelay} from '../Solver';
+import {totalFuelRequired, totalFuelWithFuelRequired, runIntcode, findNounAndVerb, getClosestIntersectionPointDistance, getMinimalSignalDelay, numberOfPasswords} from '../Solver';
 
 interface Props {
   no: number
@@ -30,13 +30,21 @@ const Day: React.FC<Props> = ({no}) => {
       )
       break;
     case 3:
-        part_one = (
-          <BasicAnswer day={no} part={1} answer={getClosestIntersectionPointDistance(Inputs.three).toString()} />
-        )
-        part_two = (
-          <BasicAnswer day={no} part={2} answer={getMinimalSignalDelay(Inputs.three).toString()} />
-        )
-        break;
+      part_one = (
+        <BasicAnswer day={no} part={1} answer={getClosestIntersectionPointDistance(Inputs.three).toString()} />
+      )
+      part_two = (
+        <BasicAnswer day={no} part={2} answer={getMinimalSignalDelay(Inputs.three).toString()} />
+      )
+      break;
+    case 4:
+      part_one = (
+        <BasicAnswer day={no} part={1} answer={numberOfPasswords(Inputs.four[0], Inputs.four[1], 1).toString()} />
+      )
+      part_two = (
+        <BasicAnswer day={no} part={2} answer={numberOfPasswords(Inputs.four[0], Inputs.four[1], 2).toString()} />
+      )
+      break;
   }
   return (
     <Container className="my-3 mx-3">
