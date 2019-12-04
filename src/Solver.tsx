@@ -42,11 +42,63 @@ export function findNounAndVerb(program: number[]) {
       let test_program = program.slice();
       test_program[1] = noun;
       test_program[2] = verb;
-      console.log(test_program);
       if (runIntcode(test_program) === target) {
         return 100 * noun + verb;
       }
     }
   }
   return -1;
+}
+export function getClosestIntersectionPointDistance(commands: string[][]) {
+  const command_regex = new RegExp('^([L|R|U|D])(\\d+)$');
+  const visited = new Set();
+  const intersections: number[][] = [];
+  let position = [0, 0];
+  commands[0].forEach((command) => {
+    var match = command_regex.exec(command);
+    if (match) {
+      for (var i = 0; i < parseInt(match[2]); i++) {
+        switch(match[1]) {
+          case 'L':
+            position[0] -= 1; break;
+          case 'R':
+            position[0] += 1; break;
+          case 'U':
+            position[1] -= 1; break;
+          case 'D':
+            position[1] += 1; break;
+        }
+        visited.add(position.toString());
+      }
+    }
+  });
+  position = [0, 0];
+  commands[1].forEach((command) => {
+    var match = command_regex.exec(command);
+    if (match) {
+      for (var i = 0; i < parseInt(match[2]); i++) {
+        switch(match[1]) {
+          case 'L':
+            position[0] -= 1; break;
+          case 'R':
+            position[0] += 1; break;
+          case 'U':
+            position[1] -= 1; break;
+          case 'D':
+            position[1] += 1; break;
+        }
+        if (visited.has(position.toString())) {
+          intersections.push(position.slice());
+        }
+      }
+    }
+  });
+  let closest_distance = 9999999999;
+  intersections.forEach((intersection) => {
+    let distance = Math.abs(intersection[0]) + Math.abs(intersection[1]);
+    if (distance < closest_distance) {
+      closest_distance = distance;
+    }
+  });
+  return closest_distance;
 }
