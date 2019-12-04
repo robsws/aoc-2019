@@ -3,7 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { Container } from 'react-bootstrap';
 import BasicAnswer from './BasicAnswer';
 import Inputs from '../Inputs';
-import {totalFuelRequired, totalFuelWithFuelRequired, runIntcode, findNounAndVerb, getClosestIntersectionPointDistance} from '../Solver';
+import {totalFuelRequired, totalFuelWithFuelRequired, runIntcode, findNounAndVerb, getClosestIntersectionPointDistance, getMinimalSignalDelay} from '../Solver';
 
 interface Props {
   no: number
@@ -34,7 +34,7 @@ const Day: React.FC<Props> = ({no}) => {
           <BasicAnswer day={no} part={1} answer={getClosestIntersectionPointDistance(Inputs.three).toString()} />
         )
         part_two = (
-          <BasicAnswer day={no} part={2} answer={'to solve'} />
+          <BasicAnswer day={no} part={2} answer={getMinimalSignalDelay(Inputs.three).toString()} />
         )
         break;
   }
