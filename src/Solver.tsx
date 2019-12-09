@@ -21,31 +21,31 @@ export function totalFuelWithFuelRequired(masses: number[]) {
 
 export function runIntcode(program: number[]) {
   let pointer = 0;
-  let test_program = program.slice();
-  while (test_program[pointer] !== 99) {
-    switch (test_program[pointer]) {
+  let p = program.slice();
+  while (p[pointer] !== 99) {
+    switch (p[pointer]) {
       case 1:
-        test_program[test_program[pointer+3]] = test_program[test_program[pointer+1]] + test_program[test_program[pointer+2]];
+        p[p[pointer+3]] = p[p[pointer+1]] + p[p[pointer+2]];
         break;
       case 2:
-        test_program[test_program[pointer+3]] = test_program[test_program[pointer+1]] * test_program[test_program[pointer+2]];
+        p[p[pointer+3]] = p[p[pointer+1]] * p[p[pointer+2]];
         break;
       default:
-        alert('Unknown opcode: '+test_program[pointer]);
+        alert('Unknown opcode: '+p[pointer]);
     } 
     pointer += 4;
   }
-  return test_program[0];
+  return p[0];
 }
 
 export function findNounAndVerb(program: number[]) {
   const target = 19690720;
   for (let noun = 0; noun < 100; noun++) {
     for (let verb = 0; verb < 100; verb++) {
-      let test_program = program.slice();
-      test_program[1] = noun;
-      test_program[2] = verb;
-      if (runIntcode(test_program) === target) {
+      let p = program.slice();
+      p[1] = noun;
+      p[2] = verb;
+      if (runIntcode(p) === target) {
         return 100 * noun + verb;
       }
     }
@@ -161,9 +161,6 @@ export function getMinimalSignalDelay(commands: string[][]) {
   intersections.forEach((intersection) => {
     let signal_delay = visited[intersection["pos"].toString()] + intersection["delay"];
     if (signal_delay < lowest_delay) {
-      console.log(visited[intersection["pos"].toString()]);
-      console.log(intersection["delay"]);
-      console.log('--');
       lowest_delay = signal_delay;
     }
   });
@@ -190,9 +187,141 @@ export function numberOfPasswords(min: number, max: number, part: number) {
         }
         last_digit = digit;
       }
-      console.log(password);
       passwords += 1;
     }
   }
   return passwords;
+}
+
+const OPCODES = [
+  {
+    'NAME': 'NULL',
+    'ARGS': 0
+  },
+  {
+    'NAME': 'ADD',
+    'ARGS': 3
+  },
+  {
+    'NAME': 'MULTIPLY',
+    'ARGS': 3
+  },
+  {
+    'NAME': 'ASSIGN',
+    'ARGS': 1
+  },
+  {
+    'NAME': 'RETURN',
+    'ARGS': 1
+  },
+  {
+    'NAME': 'JUMP-IF-TRUE',
+    'ARGS': 2
+  },
+  {
+    'NAME': 'JUMP-IF-FALSE',
+    'ARGS': 2
+  },
+  {
+    'NAME': 'LESS-THAN',
+    'ARGS': 3
+  },
+  {
+    'NAME': 'EQUALS',
+    'ARGS': 3
+  }
+];
+
+const PARAM_MODES = {
+  'POSITION': 0,
+  'IMMEDIATE': 1
+}
+
+export function runExtendedIntcode(program: number[], inputs: number[]): number[] {
+  let outputs: number[] = [];
+  let pointer = 0;
+  let p = program.slice();
+  while (p[pointer] !== 99) {
+    const opcode = p[pointer] % 100;
+    const param_modes_str = (Math.floor(p[pointer] - p[pointer] % 100) / 100).toString();
+    const param_modes = new Array(OPCODES[opcode].ARGS).fill(0);
+    let index = 0;
+    for (let i = param_modes_str.length - 1; i >= 0; i--) {
+      param_modes[index] = parseInt(param_modes_str.charAt(i));
+      index += 1;
+    }
+    const params: number[] = [];
+    param_modes.forEach((mode, index) => {
+      if (mode === PARAM_MODES.POSITION) {
+        params.push(p[pointer + index + 1]);
+      } else {
+        params.push(pointer + index + 1);
+      }
+    });
+    console.log('pointer: '+pointer)
+    console.log('intcode: '+p[pointer]+' opcode: '+opcode+' param modes: '+param_modes.toString()+' params: '+params.toString());
+    switch (OPCODES[opcode].NAME) {
+      case 'ADD':
+        console.log('ADD: '+p[params[0]]+' + '+p[params[1]]+' --> '+params[2]);
+        p[params[2]] = p[params[0]] + p[params[1]];
+        pointer += params.length + 1;
+        break;
+      case 'MULTIPLY':
+        console.log('MULTIPLY: '+p[params[0]]+' * '+p[params[1]]+' --> '+params[2]);
+        p[params[2]] = p[params[0]] * p[params[1]];
+        pointer += params.length + 1;
+        break;
+      case 'ASSIGN':
+        console.log('ASSIGN: '+inputs[0]+' --> '+params[0]);
+        p[params[0]] = inputs.shift()!;
+        pointer += params.length + 1;
+        break;
+      case 'RETURN':
+        console.log('RETURN: '+p[params[0]]+' --> OUTPUT');
+        outputs.push(p[params[0]]);
+        pointer += params.length + 1;
+        break;
+      case 'JUMP-IF-TRUE':
+        if (p[params[0]] !== 0) {
+          console.log('JUMP-IF-TRUE: '+p[params[0]]+' TRUE --> '+p[params[1]]);
+          pointer = p[params[1]];
+        } else {
+          console.log('JUMP-IF-TRUE: '+p[params[0]]+' FALSE');
+          pointer += params.length + 1;
+        }
+        break;
+      case 'JUMP-IF-FALSE':
+        if (p[params[0]] === 0) {
+          console.log('JUMP-IF-FALSE: '+p[params[0]]+' FALSE --> '+p[params[1]]);
+          pointer = p[params[1]];
+        } else {
+          console.log('JUMP-IF-FALSE: '+p[params[0]]+' TRUE');
+          pointer += params.length + 1;
+        }
+        break;
+      case 'LESS-THAN':
+        if (p[params[0]] < p[params[1]]) {
+          console.log('LESS-THAN: '+p[params[0]]+' < '+p[params[1]]+'. TRUE --> '+p[params[2]]);
+          p[params[2]] = 1;
+        } else {
+          console.log('LESS-THAN: '+p[params[0]]+' < '+p[params[1]]+'. FALSE --> '+p[params[2]]);
+          p[params[2]] = 0;
+        }
+        pointer += params.length + 1;
+        break;
+      case 'EQUALS':
+        if (p[params[0]] === p[params[1]]) {
+          console.log('EQUALS: '+p[params[0]]+' = '+p[params[1]]+'. TRUE --> '+p[params[2]]);
+          p[params[2]] = 1;
+        } else {
+          console.log('EQUALS: '+p[params[0]]+' = '+p[params[1]]+'. FALSE --> '+p[params[2]]);
+          p[params[2]] = 0;
+        }
+        pointer += params.length + 1;
+        break;
+      default:
+        alert('Unknown opcode: '+opcode+', raw int: '+p[pointer]);
+    } 
+  }
+  return outputs;
 }
