@@ -1,3 +1,10 @@
+
+function log_debug(message: string, on: boolean = false) {
+  if (on) {
+    console.log(message);
+  }
+}
+
 // Day One
 export function totalFuelRequired(masses: number[]) {
   const fuel_required: number[] = masses.map((mass) => {
@@ -258,63 +265,63 @@ export function runExtendedIntcode(program: number[], inputs: number[]): number[
         params.push(pointer + index + 1);
       }
     });
-    console.log('pointer: '+pointer)
-    console.log('intcode: '+p[pointer]+' opcode: '+opcode+' param modes: '+param_modes.toString()+' params: '+params.toString());
+    log_debug('pointer: '+pointer)
+    log_debug('intcode: '+p[pointer]+' opcode: '+opcode+' param modes: '+param_modes.toString()+' params: '+params.toString());
     switch (OPCODES[opcode].NAME) {
       case 'ADD':
-        console.log('ADD: '+p[params[0]]+' + '+p[params[1]]+' --> '+params[2]);
+        log_debug('ADD: '+p[params[0]]+' + '+p[params[1]]+' --> '+params[2]);
         p[params[2]] = p[params[0]] + p[params[1]];
         pointer += params.length + 1;
         break;
       case 'MULTIPLY':
-        console.log('MULTIPLY: '+p[params[0]]+' * '+p[params[1]]+' --> '+params[2]);
+        log_debug('MULTIPLY: '+p[params[0]]+' * '+p[params[1]]+' --> '+params[2]);
         p[params[2]] = p[params[0]] * p[params[1]];
         pointer += params.length + 1;
         break;
       case 'ASSIGN':
-        console.log('ASSIGN: '+inputs[0]+' --> '+params[0]);
+        log_debug('ASSIGN: '+inputs[0]+' --> '+params[0]);
         p[params[0]] = inputs.shift()!;
         pointer += params.length + 1;
         break;
       case 'RETURN':
-        console.log('RETURN: '+p[params[0]]+' --> OUTPUT');
+        log_debug('RETURN: '+p[params[0]]+' --> OUTPUT');
         outputs.push(p[params[0]]);
         pointer += params.length + 1;
         break;
       case 'JUMP-IF-TRUE':
         if (p[params[0]] !== 0) {
-          console.log('JUMP-IF-TRUE: '+p[params[0]]+' TRUE --> '+p[params[1]]);
+          log_debug('JUMP-IF-TRUE: '+p[params[0]]+' TRUE --> '+p[params[1]]);
           pointer = p[params[1]];
         } else {
-          console.log('JUMP-IF-TRUE: '+p[params[0]]+' FALSE');
+          log_debug('JUMP-IF-TRUE: '+p[params[0]]+' FALSE');
           pointer += params.length + 1;
         }
         break;
       case 'JUMP-IF-FALSE':
         if (p[params[0]] === 0) {
-          console.log('JUMP-IF-FALSE: '+p[params[0]]+' FALSE --> '+p[params[1]]);
+          log_debug('JUMP-IF-FALSE: '+p[params[0]]+' FALSE --> '+p[params[1]]);
           pointer = p[params[1]];
         } else {
-          console.log('JUMP-IF-FALSE: '+p[params[0]]+' TRUE');
+          log_debug('JUMP-IF-FALSE: '+p[params[0]]+' TRUE');
           pointer += params.length + 1;
         }
         break;
       case 'LESS-THAN':
         if (p[params[0]] < p[params[1]]) {
-          console.log('LESS-THAN: '+p[params[0]]+' < '+p[params[1]]+'. TRUE --> '+p[params[2]]);
+          log_debug('LESS-THAN: '+p[params[0]]+' < '+p[params[1]]+'. TRUE --> '+p[params[2]]);
           p[params[2]] = 1;
         } else {
-          console.log('LESS-THAN: '+p[params[0]]+' < '+p[params[1]]+'. FALSE --> '+p[params[2]]);
+          log_debug('LESS-THAN: '+p[params[0]]+' < '+p[params[1]]+'. FALSE --> '+p[params[2]]);
           p[params[2]] = 0;
         }
         pointer += params.length + 1;
         break;
       case 'EQUALS':
         if (p[params[0]] === p[params[1]]) {
-          console.log('EQUALS: '+p[params[0]]+' = '+p[params[1]]+'. TRUE --> '+p[params[2]]);
+          log_debug('EQUALS: '+p[params[0]]+' = '+p[params[1]]+'. TRUE --> '+p[params[2]]);
           p[params[2]] = 1;
         } else {
-          console.log('EQUALS: '+p[params[0]]+' = '+p[params[1]]+'. FALSE --> '+p[params[2]]);
+          log_debug('EQUALS: '+p[params[0]]+' = '+p[params[1]]+'. FALSE --> '+p[params[2]]);
           p[params[2]] = 0;
         }
         pointer += params.length + 1;
@@ -324,4 +331,58 @@ export function runExtendedIntcode(program: number[], inputs: number[]): number[
     } 
   }
   return outputs;
+}
+
+export function totalOrbits(orbit_strs: string[]) {
+  const orbit_pattern = new RegExp('(\\w+)\\)(\\w+)');
+  const planets: {[id: string]: string[]} = {};
+  orbit_strs.forEach((orbit_str) => {
+    let match = orbit_pattern.exec(orbit_str)!;
+    if (!(match[1] in planets)) {
+      planets[match[1]] = [];
+    }
+    if (!(match[2] in planets)) {
+      planets[match[2]] = [];
+    }
+    planets[match[1]].push(match[2]);
+  });
+  let orbits = 0;
+  let shell = 0;
+  let shell_planets = ['COM'];
+  while (shell_planets.length > 0) {
+    orbits += shell_planets.length * shell;
+    let next_shell_planets: string[] = [];
+    shell_planets.forEach((planet) => {
+      next_shell_planets = next_shell_planets.concat(planets[planet]);
+    });
+    shell_planets = next_shell_planets;
+    shell += 1;
+  }
+  return orbits;
+}
+
+export function orbitalTransfers(orbit_strs: string[]) {
+  const orbit_pattern = new RegExp('(\\w+)\\)(\\w+)');
+  const planets: {[id: string]: string} = {};
+  orbit_strs.forEach((orbit_str) => {
+    let match = orbit_pattern.exec(orbit_str)!;
+    planets[match[2]] = match[1];
+  });
+
+  let planet = 'YOU';
+  let distance = 0;
+  const path: {[id: string]: number} = {planet: distance};
+  while (planet !== 'COM') {
+    planet = planets[planet];
+    distance += 1;
+    path[planet] = distance;
+  }
+
+  planet = 'SAN';
+  distance = 0;
+  while (!(planet in path)) {
+    planet = planets[planet];
+    distance += 1;
+  }
+  return distance + path[planet] - 2;
 }
