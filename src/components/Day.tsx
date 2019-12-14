@@ -3,7 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { Container } from 'react-bootstrap';
 import BasicAnswer from './BasicAnswer';
 import Inputs from '../Inputs';
-import {totalFuelRequired, totalFuelWithFuelRequired, runIntcode, findNounAndVerb, getClosestIntersectionPointDistance, getMinimalSignalDelay, numberOfPasswords, runExtendedIntcode, totalOrbits, orbitalTransfers} from '../Solver';
+import {totalFuelRequired, totalFuelWithFuelRequired, runIntcode, findNounAndVerb, getClosestIntersectionPointDistance, getMinimalSignalDelay, numberOfPasswords, runExtendedIntcode, totalOrbits, orbitalTransfers, maximumOutputSignal, maximumOutputSignalWithFeedbackLoop} from '../Solver';
 
 interface Props {
   no: number
@@ -46,20 +46,38 @@ const Day: React.FC<Props> = ({no}) => {
       )
       break;
     case 5:
+      let answer = 0;
+      const intcode1 = runExtendedIntcode(Inputs.five, [1]);
+      for (const result of intcode1) {
+        answer = result;
+      }
       part_one = (
-        <BasicAnswer day={no} part={1} answer={runExtendedIntcode(Inputs.five, [1]).toString()} />
+        <BasicAnswer day={no} part={1} answer={answer.toString()} />
       )
+      const intcode2 = runExtendedIntcode(Inputs.five, [5]);
+      for (const result of intcode2) {
+        answer = result;
+      }
       part_two = (
-        <BasicAnswer day={no} part={2} answer={runExtendedIntcode(Inputs.five, [5]).toString()} />
+        <BasicAnswer day={no} part={2} answer={answer.toString()} />
       )
       break;
     case 6:
-        part_one = (
-          <BasicAnswer day={no} part={1} answer={totalOrbits(Inputs.six).toString()} />
-        )
-        part_two = (
-          <BasicAnswer day={no} part={2} answer={orbitalTransfers(Inputs.six).toString()} />
-        )
+      part_one = (
+        <BasicAnswer day={no} part={1} answer={totalOrbits(Inputs.six).toString()} />
+      )
+      part_two = (
+        <BasicAnswer day={no} part={2} answer={orbitalTransfers(Inputs.six).toString()} />
+      )
+      break;
+    case 7:
+      part_one = (
+        <BasicAnswer day={no} part={1} answer={maximumOutputSignal(Inputs.seven).toString()} />
+      )
+      part_two = (
+        <BasicAnswer day={no} part={2} answer={maximumOutputSignalWithFeedbackLoop(Inputs.seven).toString()} />
+      )
+      break;
   }
   return (
     <Container className="my-3 mx-3">

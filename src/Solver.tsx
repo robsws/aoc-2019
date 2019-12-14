@@ -1,4 +1,3 @@
-
 function log_debug(message: string, on: boolean = false) {
   if (on) {
     console.log(message);
@@ -26,6 +25,7 @@ export function totalFuelWithFuelRequired(masses: number[]) {
   return fuel_required.reduce((a, b) => {return a + b});
 }
 
+// Day two
 export function runIntcode(program: number[]) {
   let pointer = 0;
   let p = program.slice();
@@ -60,6 +60,7 @@ export function findNounAndVerb(program: number[]) {
   return -1;
 }
 
+// Day three
 export function getClosestIntersectionPointDistance(commands: string[][]) {
   const command_regex = new RegExp('^([L|R|U|D])(\\d+)$');
   const visited = new Set();
@@ -174,6 +175,7 @@ export function getMinimalSignalDelay(commands: string[][]) {
   return lowest_delay;
 }
 
+// Day four
 export function numberOfPasswords(min: number, max: number, part: number) {
   let double_digit_pattern;
   if (part === 1) {
@@ -200,6 +202,7 @@ export function numberOfPasswords(min: number, max: number, part: number) {
   return passwords;
 }
 
+// Day five (intcode computer)
 const OPCODES = [
   {
     'NAME': 'NULL',
@@ -214,11 +217,11 @@ const OPCODES = [
     'ARGS': 3
   },
   {
-    'NAME': 'ASSIGN',
+    'NAME': 'CONSUME',
     'ARGS': 1
   },
   {
-    'NAME': 'RETURN',
+    'NAME': 'EMIT',
     'ARGS': 1
   },
   {
@@ -244,8 +247,7 @@ const PARAM_MODES = {
   'IMMEDIATE': 1
 }
 
-export function runExtendedIntcode(program: number[], inputs: number[]): number[] {
-  let outputs: number[] = [];
+export function* runExtendedIntcode(program: number[], input_q: number[]): Generator<number> {
   let pointer = 0;
   let p = program.slice();
   while (p[pointer] !== 99) {
@@ -278,14 +280,14 @@ export function runExtendedIntcode(program: number[], inputs: number[]): number[
         p[params[2]] = p[params[0]] * p[params[1]];
         pointer += params.length + 1;
         break;
-      case 'ASSIGN':
-        log_debug('ASSIGN: '+inputs[0]+' --> '+params[0]);
-        p[params[0]] = inputs.shift()!;
+      case 'CONSUME':
+        p[params[0]] = input_q.shift()!;
+        log_debug('CONSUME: '+p[params[0]]+' --> '+params[0]);
         pointer += params.length + 1;
         break;
-      case 'RETURN':
-        log_debug('RETURN: '+p[params[0]]+' --> OUTPUT');
-        outputs.push(p[params[0]]);
+      case 'EMIT':
+        log_debug('EMIT: '+p[params[0]]+' --> OUTPUT');
+        yield p[params[0]];
         pointer += params.length + 1;
         break;
       case 'JUMP-IF-TRUE':
@@ -330,9 +332,9 @@ export function runExtendedIntcode(program: number[], inputs: number[]): number[
         alert('Unknown opcode: '+opcode+', raw int: '+p[pointer]);
     } 
   }
-  return outputs;
 }
 
+// Day six
 export function totalOrbits(orbit_strs: string[]) {
   const orbit_pattern = new RegExp('(\\w+)\\)(\\w+)');
   const planets: {[id: string]: string[]} = {};
@@ -385,4 +387,70 @@ export function orbitalTransfers(orbit_strs: string[]) {
     distance += 1;
   }
   return distance + path[planet] - 2;
+}
+
+// Day seven
+function permutations(list: number[]) {
+  if (list.length === 1) {
+    return [list];
+  }
+  const p: number[][] = [];
+  list.forEach((num, i) => {
+    const rest = list.slice();
+    rest.splice(i, 1);
+    permutations(rest).forEach((rest_p) => {
+      p.push([num, ...rest_p]);
+    });
+  });
+  return p;
+}
+
+export function maximumOutputSignal(program: number[]): number {
+  let max_output_signal = 0;
+  const phase_settings = permutations([0, 1, 2, 3, 4]);
+  phase_settings.forEach((settings) => {
+    let signal = 0;
+    settings.forEach((phase) => {
+      const intcode = runExtendedIntcode(program.slice(), [phase, signal]);
+      for (const result of intcode) {
+        signal = result;
+      }
+    });
+    max_output_signal = Math.max(max_output_signal, signal);
+  });
+  return max_output_signal;
+}
+
+export function maximumOutputSignalWithFeedbackLoop(program: number[]): number {
+  let max_output_signal = 0;
+  const phase_settings = permutations([5, 6, 7, 8, 9]);
+  phase_settings.forEach((settings) => {
+    const input_qs: number[][] = [];
+    let final_output: number = 0;
+    settings.forEach((phase) => {
+      input_qs.push([phase]);
+    });
+    input_qs[0].push(0);
+    const amps: Generator<number>[] = [];
+    input_qs.forEach((q) => {
+      amps.push(runExtendedIntcode(program.slice(), q));
+    });
+    let result: IteratorResult<number> = {value: 0, done: false};
+    do {
+      amps.forEach((amp, i) => {
+        result = amp.next()
+        if (result.done) {
+          return;
+        }
+        if (i === amps.length - 1) {
+          final_output = result.value;
+          input_qs[0].push(result.value);
+        } else {
+          input_qs[i+1].push(result.value);
+        }
+      });
+    } while(!result.done)
+    max_output_signal = Math.max(max_output_signal, final_output);
+  });
+  return max_output_signal;
 }

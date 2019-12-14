@@ -29,6 +29,9 @@ const App: React.FC = () => {
         <Tab eventKey="day6" title="Day Six">
           <Day no={6} />
         </Tab>
+        <Tab eventKey="day7" title="Day Seven">
+          <Day no={7} />
+        </Tab>
       </Tabs>
     </div>
   );
