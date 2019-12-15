@@ -454,3 +454,61 @@ export function maximumOutputSignalWithFeedbackLoop(program: number[]): number {
   });
   return max_output_signal;
 }
+
+function loadSpaceImage(image_encoded: string, width: number, height: number) {
+  const layers: number[][][] = [];
+  const layer_digits: {[digit: number]: number}[] = [];
+  for (let i = 0; i < image_encoded.length; i++) {
+    const layer = Math.floor(i / (width * height));
+    if (layer > layers.length - 1) {
+      layers.push([]);
+      layer_digits.push({});
+    }
+    const offset = i % (width * height);
+    // const x = offset % width;
+    const y = Math.floor(offset / width);
+    if (y > layers[layer].length - 1) {
+      layers[layer].push([]);
+    }
+    const digit = parseInt(image_encoded[i]);
+    layers[layer][y].push(digit);
+    if (!(digit in layer_digits[layer])) {
+      layer_digits[layer][digit] = 0;
+    }
+    layer_digits[layer][digit] += 1;
+  }
+  return {'layers': layers, 'layer_digits': layer_digits};
+}
+
+export function validateSpaceImage(image_encoded: string, width: number, height: number) {
+  const image = loadSpaceImage(image_encoded, width, height);
+  const least_zeros = image.layer_digits.reduce((acc, layer) => {
+    if (layer[0] < acc[0]) {
+      return layer;
+    } else {
+      return acc;
+    }
+  });
+  return least_zeros[1] * least_zeros[2];
+}
+
+export function drawSpaceImageFunction(image_encoded: string, width: number, height: number) {
+  const image = loadSpaceImage(image_encoded, width, height);
+  return (canvas: CanvasRenderingContext2D, scale: number) => {
+    image.layers.reverse().forEach((layer) => {
+      for (let x = 0; x < width; x++) {
+        for (let y = 0; y < height; y++) {
+          let colour = 200;
+          if (layer[y][x] === 0) {
+            colour = 0;
+          }
+          else if (layer[y][x] === 2) {
+            continue;
+          }
+          canvas.fillStyle = "rgba("+colour+","+colour+","+colour+",255)";
+          canvas.fillRect( x*scale, y*scale, scale, scale );
+        }
+      }
+    });
+  };
+}

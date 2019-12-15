@@ -3,7 +3,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { Container } from 'react-bootstrap';
 import BasicAnswer from './BasicAnswer';
 import Inputs from '../Inputs';
-import {totalFuelRequired, totalFuelWithFuelRequired, runIntcode, findNounAndVerb, getClosestIntersectionPointDistance, getMinimalSignalDelay, numberOfPasswords, runExtendedIntcode, totalOrbits, orbitalTransfers, maximumOutputSignal, maximumOutputSignalWithFeedbackLoop} from '../Solver';
+import {totalFuelRequired, totalFuelWithFuelRequired, runIntcode, findNounAndVerb, getClosestIntersectionPointDistance, getMinimalSignalDelay, numberOfPasswords, runExtendedIntcode, totalOrbits, orbitalTransfers, maximumOutputSignal, maximumOutputSignalWithFeedbackLoop, validateSpaceImage, drawSpaceImageFunction} from '../Solver';
+import CanvasAnswer from './CanvasAnswer';
 
 interface Props {
   no: number
@@ -76,6 +77,14 @@ const Day: React.FC<Props> = ({no}) => {
       )
       part_two = (
         <BasicAnswer day={no} part={2} answer={maximumOutputSignalWithFeedbackLoop(Inputs.seven).toString()} />
+      )
+      break;
+    case 8:
+      part_one = (
+        <BasicAnswer day={no} part={1} answer={validateSpaceImage(Inputs.eight, 25, 6).toString()} />
+      )
+      part_two = (
+        <CanvasAnswer day={no} part={2} width={25} height={6} scale={8} draw_func={drawSpaceImageFunction(Inputs.eight, 25, 6)} />
       )
       break;
   }
