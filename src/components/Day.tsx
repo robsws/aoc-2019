@@ -3,7 +3,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { Container } from 'react-bootstrap';
 import BasicAnswer from './BasicAnswer';
 import Inputs from '../Inputs';
-import {totalFuelRequired, totalFuelWithFuelRequired, runIntcode, findNounAndVerb, getClosestIntersectionPointDistance, getMinimalSignalDelay, numberOfPasswords, runExtendedIntcode, totalOrbits, orbitalTransfers, maximumOutputSignal, maximumOutputSignalWithFeedbackLoop, validateSpaceImage, drawSpaceImageFunction} from '../Solver';
+import {totalFuelRequired, totalFuelWithFuelRequired, runBasicIntcode, findNounAndVerb, getClosestIntersectionPointDistance, getMinimalSignalDelay, numberOfPasswords, totalOrbits, orbitalTransfers, maximumOutputSignal, maximumOutputSignalWithFeedbackLoop, validateSpaceImage, drawSpaceImageFunction} from '../Solver';
+import {runIntcode, toggle_debug} from '../Intcode';
 import CanvasAnswer from './CanvasAnswer';
 
 interface Props {
@@ -11,8 +12,8 @@ interface Props {
 }
 
 const Day: React.FC<Props> = ({no}) => {
-  var part_one;
-  var part_two;
+  var part_one = (<p>Part One: Not implemented</p>);
+  var part_two = (<p>Part Two: Not implemented</p>);
   switch (no) {
     case 1:
       part_one = (
@@ -24,7 +25,7 @@ const Day: React.FC<Props> = ({no}) => {
       break;
     case 2:
       part_one = (
-        <BasicAnswer day={no} part={1} answer={runIntcode(Inputs.two).toString()} />
+        <BasicAnswer day={no} part={1} answer={runBasicIntcode(Inputs.two).toString()} />
       )
       part_two = (
         <BasicAnswer day={no} part={2} answer={findNounAndVerb(Inputs.two).toString()} />
@@ -48,14 +49,14 @@ const Day: React.FC<Props> = ({no}) => {
       break;
     case 5:
       let answer = 0;
-      const intcode1 = runExtendedIntcode(Inputs.five, [1]);
+      const intcode1 = runIntcode(Inputs.five, [1]);
       for (const result of intcode1) {
         answer = result;
       }
       part_one = (
         <BasicAnswer day={no} part={1} answer={answer.toString()} />
       )
-      const intcode2 = runExtendedIntcode(Inputs.five, [5]);
+      const intcode2 = runIntcode(Inputs.five, [5]);
       for (const result of intcode2) {
         answer = result;
       }
@@ -85,6 +86,24 @@ const Day: React.FC<Props> = ({no}) => {
       )
       part_two = (
         <CanvasAnswer day={no} part={2} width={25} height={6} scale={8} draw_func={drawSpaceImageFunction(Inputs.eight, 25, 6)} />
+      )
+      break;
+    case 9:
+      let output: number = 0;
+      const intcode9_1 = runIntcode(Inputs.nine, [1]);
+      for (const result of intcode9_1) {
+        output = result;
+      }
+      part_one = (
+        <BasicAnswer day={no} part={1} answer={output.toString()} />
+      )
+      let output2: number = 0;
+      const intcode9_2 = runIntcode(Inputs.nine, [2]);
+      for (const result of intcode9_2) {
+        output2 = result;
+      }
+      part_two = (
+        <BasicAnswer day={no} part={2} answer={output2.toString()} />
       )
       break;
   }

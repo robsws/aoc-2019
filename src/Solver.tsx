@@ -1,8 +1,4 @@
-function log_debug(message: string, on: boolean = false) {
-  if (on) {
-    console.log(message);
-  }
-}
+import { runIntcode } from "./Intcode";
 
 // Day One
 export function totalFuelRequired(masses: number[]) {
@@ -26,7 +22,7 @@ export function totalFuelWithFuelRequired(masses: number[]) {
 }
 
 // Day two
-export function runIntcode(program: number[]) {
+export function runBasicIntcode(program: number[]) {
   let pointer = 0;
   let p = program.slice();
   while (p[pointer] !== 99) {
@@ -52,7 +48,7 @@ export function findNounAndVerb(program: number[]) {
       let p = program.slice();
       p[1] = noun;
       p[2] = verb;
-      if (runIntcode(p) === target) {
+      if (runBasicIntcode(p) === target) {
         return 100 * noun + verb;
       }
     }
@@ -202,138 +198,6 @@ export function numberOfPasswords(min: number, max: number, part: number) {
   return passwords;
 }
 
-// Day five (intcode computer)
-const OPCODES = [
-  {
-    'NAME': 'NULL',
-    'ARGS': 0
-  },
-  {
-    'NAME': 'ADD',
-    'ARGS': 3
-  },
-  {
-    'NAME': 'MULTIPLY',
-    'ARGS': 3
-  },
-  {
-    'NAME': 'CONSUME',
-    'ARGS': 1
-  },
-  {
-    'NAME': 'EMIT',
-    'ARGS': 1
-  },
-  {
-    'NAME': 'JUMP-IF-TRUE',
-    'ARGS': 2
-  },
-  {
-    'NAME': 'JUMP-IF-FALSE',
-    'ARGS': 2
-  },
-  {
-    'NAME': 'LESS-THAN',
-    'ARGS': 3
-  },
-  {
-    'NAME': 'EQUALS',
-    'ARGS': 3
-  }
-];
-
-const PARAM_MODES = {
-  'POSITION': 0,
-  'IMMEDIATE': 1
-}
-
-export function* runExtendedIntcode(program: number[], input_q: number[]): Generator<number> {
-  let pointer = 0;
-  let p = program.slice();
-  while (p[pointer] !== 99) {
-    const opcode = p[pointer] % 100;
-    const param_modes_str = (Math.floor(p[pointer] - p[pointer] % 100) / 100).toString();
-    const param_modes = new Array(OPCODES[opcode].ARGS).fill(0);
-    let index = 0;
-    for (let i = param_modes_str.length - 1; i >= 0; i--) {
-      param_modes[index] = parseInt(param_modes_str.charAt(i));
-      index += 1;
-    }
-    const params: number[] = [];
-    param_modes.forEach((mode, index) => {
-      if (mode === PARAM_MODES.POSITION) {
-        params.push(p[pointer + index + 1]);
-      } else {
-        params.push(pointer + index + 1);
-      }
-    });
-    log_debug('pointer: '+pointer)
-    log_debug('intcode: '+p[pointer]+' opcode: '+opcode+' param modes: '+param_modes.toString()+' params: '+params.toString());
-    switch (OPCODES[opcode].NAME) {
-      case 'ADD':
-        log_debug('ADD: '+p[params[0]]+' + '+p[params[1]]+' --> '+params[2]);
-        p[params[2]] = p[params[0]] + p[params[1]];
-        pointer += params.length + 1;
-        break;
-      case 'MULTIPLY':
-        log_debug('MULTIPLY: '+p[params[0]]+' * '+p[params[1]]+' --> '+params[2]);
-        p[params[2]] = p[params[0]] * p[params[1]];
-        pointer += params.length + 1;
-        break;
-      case 'CONSUME':
-        p[params[0]] = input_q.shift()!;
-        log_debug('CONSUME: '+p[params[0]]+' --> '+params[0]);
-        pointer += params.length + 1;
-        break;
-      case 'EMIT':
-        log_debug('EMIT: '+p[params[0]]+' --> OUTPUT');
-        yield p[params[0]];
-        pointer += params.length + 1;
-        break;
-      case 'JUMP-IF-TRUE':
-        if (p[params[0]] !== 0) {
-          log_debug('JUMP-IF-TRUE: '+p[params[0]]+' TRUE --> '+p[params[1]]);
-          pointer = p[params[1]];
-        } else {
-          log_debug('JUMP-IF-TRUE: '+p[params[0]]+' FALSE');
-          pointer += params.length + 1;
-        }
-        break;
-      case 'JUMP-IF-FALSE':
-        if (p[params[0]] === 0) {
-          log_debug('JUMP-IF-FALSE: '+p[params[0]]+' FALSE --> '+p[params[1]]);
-          pointer = p[params[1]];
-        } else {
-          log_debug('JUMP-IF-FALSE: '+p[params[0]]+' TRUE');
-          pointer += params.length + 1;
-        }
-        break;
-      case 'LESS-THAN':
-        if (p[params[0]] < p[params[1]]) {
-          log_debug('LESS-THAN: '+p[params[0]]+' < '+p[params[1]]+'. TRUE --> '+p[params[2]]);
-          p[params[2]] = 1;
-        } else {
-          log_debug('LESS-THAN: '+p[params[0]]+' < '+p[params[1]]+'. FALSE --> '+p[params[2]]);
-          p[params[2]] = 0;
-        }
-        pointer += params.length + 1;
-        break;
-      case 'EQUALS':
-        if (p[params[0]] === p[params[1]]) {
-          log_debug('EQUALS: '+p[params[0]]+' = '+p[params[1]]+'. TRUE --> '+p[params[2]]);
-          p[params[2]] = 1;
-        } else {
-          log_debug('EQUALS: '+p[params[0]]+' = '+p[params[1]]+'. FALSE --> '+p[params[2]]);
-          p[params[2]] = 0;
-        }
-        pointer += params.length + 1;
-        break;
-      default:
-        alert('Unknown opcode: '+opcode+', raw int: '+p[pointer]);
-    } 
-  }
-}
-
 // Day six
 export function totalOrbits(orbit_strs: string[]) {
   const orbit_pattern = new RegExp('(\\w+)\\)(\\w+)');
@@ -411,7 +275,7 @@ export function maximumOutputSignal(program: number[]): number {
   phase_settings.forEach((settings) => {
     let signal = 0;
     settings.forEach((phase) => {
-      const intcode = runExtendedIntcode(program.slice(), [phase, signal]);
+      const intcode = runIntcode(program.slice(), [phase, signal]);
       for (const result of intcode) {
         signal = result;
       }
@@ -433,7 +297,7 @@ export function maximumOutputSignalWithFeedbackLoop(program: number[]): number {
     input_qs[0].push(0);
     const amps: Generator<number>[] = [];
     input_qs.forEach((q) => {
-      amps.push(runExtendedIntcode(program.slice(), q));
+      amps.push(runIntcode(program.slice(), q));
     });
     let result: IteratorResult<number> = {value: 0, done: false};
     do {
