@@ -376,3 +376,70 @@ export function drawSpaceImageFunction(image_encoded: string, width: number, hei
     });
   };
 }
+
+function gcd(a:number, b:number): number {
+  if (b === 0) {
+    return a;
+  }
+  return gcd(b, a % b);
+}
+
+function visibleAsteroids(x: number, y: number, map:string[][]) {
+  const visible: number[][] = [];
+  map.forEach((probe_row, probe_y) => {
+    probe_row.forEach((probe, probe_x) => {
+      if (!(probe_x === x && probe_y === y) && probe === '#') {
+        const unit_x_offset = -(probe_x - x) / Math.abs(gcd((probe_x - x), (probe_y - y)));
+        const unit_y_offset = -(probe_y - y) / Math.abs(gcd((probe_x - x), (probe_y - y)));
+        let x_offset = 0;
+        let y_offset = 0;
+        while (map[probe_y+y_offset][probe_x+x_offset] !== '#' || (x_offset === 0 && y_offset === 0)) {
+          x_offset += unit_x_offset;
+          y_offset += unit_y_offset;
+          if (probe_x + x_offset === x && probe_y + y_offset === y) {
+            visible.push([probe_x, probe_y]);
+            break;
+          }
+        }
+      }
+    });
+  });
+  return visible;
+}
+
+export function bestStationLocation(map: string[][]) {
+  let most_visible = 0;
+  let station = [-1, -1];
+  map.forEach((row, y) => {
+    row.forEach((space, x) => {
+      if (space === '#') {
+        const visible = visibleAsteroids(x, y, map);
+        if (visible.length > most_visible) {
+          station = [x, y];
+          most_visible = visible.length;
+        } 
+      }
+    });
+  });
+  return {'x': station[0], 'y': station[1], 'visible': most_visible};
+}
+
+export function twoHundredthAsteroid(x: number, y: number, map: string[][]) {
+  // Won't do a second loop around, but that's fine on my puzzle input.
+  const visible = visibleAsteroids(x, y, map);
+  let visible_with_angles = visible.map((location) => {
+    let angle = Math.atan2(location[1]-y, location[0]-x);
+    if (angle < -Math.PI/2) {
+      angle = 2*Math.PI + angle;
+    }
+    return {
+      'x': location[0], 'y': location[1], 'angle': angle
+    };
+  });
+  visible_with_angles.sort((a, b) => {
+    return a.angle - b.angle;  
+  });
+  console.log(visible_with_angles);
+  const two_hundredth = visible_with_angles[199];
+  return two_hundredth.x * 100 + two_hundredth.y;
+}
