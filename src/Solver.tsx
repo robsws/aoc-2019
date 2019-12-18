@@ -443,3 +443,64 @@ export function twoHundredthAsteroid(x: number, y: number, map: string[][]) {
   const two_hundredth = visible_with_angles[199];
   return two_hundredth.x * 100 + two_hundredth.y;
 }
+
+class ExtendableGrid {
+  grid: number[][];
+  x_offset: number;
+  y_offset: number;
+
+  constructor() {
+    this.grid = [];
+    this.x_offset = 0;
+    this.y_offset = 0;
+  }
+
+  write(x: number, y: number, value: number): void {
+    this.growGridToCoordinate(x, y);
+    this.grid[x+this.x_offset][y+this.y_offset] = value;
+  }
+
+  read(x: number, y: number): number {
+    this.growGridToCoordinate(x, y);
+    return this.grid[x+this.x_offset][y+this.y_offset];
+  }
+
+  private growGridToCoordinate(x: number, y: number): void {
+    while (x + this.x_offset < 0) {
+      this.prependX();
+    }
+    while (x + this.x_offset >= this.grid.length) {
+      this.extendX();
+    }
+    while (y + this.y_offset < 0) {
+      this.prependY(x);
+    }
+    while (y + this.y_offset >= this.grid[x + this.x_offset].length) {
+      this.extendY(x);
+    }
+  }
+
+  private prependX(): void {
+    this.grid.unshift([]);
+    this.x_offset += 1;
+  }
+
+  private prependY(x: number): void {
+    this.grid[x + this.x_offset].unshift(0);
+    this.y_offset += 1;
+  }
+
+  private extendX(): void {
+    this.grid.push([]);
+  }
+
+  private extendY(x: number): void {
+    this.grid[x + this.x_offset].push(0);
+  }
+}
+
+function paintHull(program: number[]): number[][] {
+  const brain_input: number[] = [];
+  const brain = runIntcode(program, brain_input);
+  const hull = 
+}
