@@ -448,11 +448,13 @@ class ExtendableGrid {
   grid: number[][];
   x_offset: number;
   y_offset: number;
+  initial_value: number;
 
-  constructor() {
+  constructor(initial_value: number) {
     this.grid = [];
     this.x_offset = 0;
     this.y_offset = 0;
+    this.initial_value = initial_value;
   }
 
   write(x: number, y: number, value: number): void {
@@ -486,7 +488,7 @@ class ExtendableGrid {
   }
 
   private prependY(x: number): void {
-    this.grid[x + this.x_offset].unshift(0);
+    this.grid[x + this.x_offset].unshift(this.initial_value);
     this.y_offset += 1;
   }
 
@@ -495,12 +497,48 @@ class ExtendableGrid {
   }
 
   private extendY(x: number): void {
-    this.grid[x + this.x_offset].push(0);
+    this.grid[x + this.x_offset].push(this.initial_value);
+  }
+}
+
+interface Vec2 {
+  x: number,
+  y: number
+}
+
+class RobotPainter {
+  position: Vec2;
+  direction: Vec2;
+
+  constructor(position: Vec2, direction: Vec2) {
+    this.position = position;
+    this.direction = direction;
+  }
+
+  turnLeft(): {
+
+  }
+
+  turnRight() {
+
+  }
+
+  getPosition(): Vec2 {
+
   }
 }
 
 function paintHull(program: number[]): number[][] {
   const brain_input: number[] = [];
   const brain = runIntcode(program, brain_input);
-  const hull = 
+  const hull = new ExtendableGrid(0);
+  let x = 0;
+  let y = 0;
+  brain_input.push(hull.read(x, y));
+  for (const colour of brain) {
+    hull.write(x, y, colour);
+    const direction = brain.next();
+
+    brain_input.push(hull.read(x, y));
+  }
 }
