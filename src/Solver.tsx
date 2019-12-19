@@ -439,9 +439,17 @@ export function twoHundredthAsteroid(x: number, y: number, map: string[][]) {
   visible_with_angles.sort((a, b) => {
     return a.angle - b.angle;  
   });
-  console.log(visible_with_angles);
   const two_hundredth = visible_with_angles[199];
   return two_hundredth.x * 100 + two_hundredth.y;
+}
+
+interface Vec2 {
+  x: number,
+  y: number
+}
+
+function vecToString(vec: Vec2) {
+  return vec.x.toString()+','+vec.y.toString();
 }
 
 class ExtendableGrid {
@@ -457,28 +465,28 @@ class ExtendableGrid {
     this.initial_value = initial_value;
   }
 
-  write(x: number, y: number, value: number): void {
-    this.growGridToCoordinate(x, y);
-    this.grid[x+this.x_offset][y+this.y_offset] = value;
+  write(pos: Vec2, value: number): void {
+    this.growGridToCoordinate(pos);
+    this.grid[pos.x+this.x_offset][pos.y+this.y_offset] = value;
   }
 
-  read(x: number, y: number): number {
-    this.growGridToCoordinate(x, y);
-    return this.grid[x+this.x_offset][y+this.y_offset];
+  read(pos: Vec2): number {
+    this.growGridToCoordinate(pos);
+    return this.grid[pos.x+this.x_offset][pos.y+this.y_offset];
   }
 
-  private growGridToCoordinate(x: number, y: number): void {
-    while (x + this.x_offset < 0) {
+  private growGridToCoordinate(pos: Vec2): void {
+    while (pos.x + this.x_offset < 0) {
       this.prependX();
     }
-    while (x + this.x_offset >= this.grid.length) {
+    while (pos.x + this.x_offset >= this.grid.length) {
       this.extendX();
     }
-    while (y + this.y_offset < 0) {
-      this.prependY(x);
+    while (pos.y + this.y_offset < 0) {
+      this.prependY(pos.x);
     }
-    while (y + this.y_offset >= this.grid[x + this.x_offset].length) {
-      this.extendY(x);
+    while (pos.y + this.y_offset >= this.grid[pos.x + this.x_offset].length) {
+      this.extendY(pos.x);
     }
   }
 
@@ -501,12 +509,7 @@ class ExtendableGrid {
   }
 }
 
-interface Vec2 {
-  x: number,
-  y: number
-}
-
-class RobotPainter {
+class Robot {
   position: Vec2;
   direction: Vec2;
 
@@ -515,30 +518,49 @@ class RobotPainter {
     this.direction = direction;
   }
 
-  turnLeft(): {
-
+  turnLeft(): void {
+    this.direction = {x: this.direction.y, y: this.direction.x * -1};
   }
 
-  turnRight() {
-
+  turnRight(): void {
+    this.direction = {x: this.direction.y * -1, y: this.direction.x};
   }
 
-  getPosition(): Vec2 {
-
+  moveForward(): void {
+    this.position = {x: this.position.x + this.direction.x, y: this.position.y + this.direction.y};
   }
 }
 
-function paintHull(program: number[]): number[][] {
+export function paintHull(program: number[]): number {
   const brain_input: number[] = [];
   const brain = runIntcode(program, brain_input);
+  const robot = new Robot({x: 0, y: 0}, {x: 0, y: -1});
   const hull = new ExtendableGrid(0);
-  let x = 0;
-  let y = 0;
-  brain_input.push(hull.read(x, y));
+  let visited = new Set();
+  let painted = 0;
+  brain_input.push(hull.read(robot.position));
   for (const colour of brain) {
-    hull.write(x, y, colour);
-    const direction = brain.next();
-
-    brain_input.push(hull.read(x, y));
+    console.log('---');
+    console.log(robot.position);
+    console.log(robot.direction);
+    console.log(colour);
+    hull.write(robot.position, colour);
+    visited.add(vecToString(robot.position));
+    painted++;
+    const direction_code = brain.next().value;
+    console.log(direction_code);
+    if (direction_code === 0) {
+      robot.turnLeft();
+    } else {
+      robot.turnRight();
+    }
+    robot.moveForward();
+    brain_input.push(hull.read(robot.position));
+    if (painted > 10) {
+      break;
+    }
   }
+  console.log(painted);
+  console.log(visited);
+  return visited.size;
 }

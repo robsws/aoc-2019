@@ -3,7 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { Container } from 'react-bootstrap';
 import BasicAnswer from './BasicAnswer';
 import Inputs from '../Inputs';
-import {totalFuelRequired, totalFuelWithFuelRequired, runBasicIntcode, findNounAndVerb, getClosestIntersectionPointDistance, getMinimalSignalDelay, numberOfPasswords, totalOrbits, orbitalTransfers, maximumOutputSignal, maximumOutputSignalWithFeedbackLoop, validateSpaceImage, drawSpaceImageFunction, bestStationLocation, twoHundredthAsteroid} from '../Solver';
+import {totalFuelRequired, totalFuelWithFuelRequired, runBasicIntcode, findNounAndVerb, getClosestIntersectionPointDistance, getMinimalSignalDelay, numberOfPasswords, totalOrbits, orbitalTransfers, maximumOutputSignal, maximumOutputSignalWithFeedbackLoop, validateSpaceImage, drawSpaceImageFunction, bestStationLocation, twoHundredthAsteroid, paintHull} from '../Solver';
 import {runIntcode, toggle_debug} from '../Intcode';
 import CanvasAnswer from './CanvasAnswer';
 
@@ -114,6 +114,14 @@ const Day: React.FC<Props> = ({no}) => {
       part_two = (
         <BasicAnswer day={no} part={1} answer={twoHundredthAsteroid(station.x, station.y, Inputs.ten).toString()} />
       )
+      break;
+    case 11:
+      part_one = (
+        <BasicAnswer day={no} part={1} answer={paintHull(Inputs.eleven).toString()} />
+      )
+      // part_two = (
+      //   <BasicAnswer day={no} part={1} answer={twoHundredthAsteroid(station.x, station.y, Inputs.ten).toString()} />
+      // )
       break;
   }
   return (
